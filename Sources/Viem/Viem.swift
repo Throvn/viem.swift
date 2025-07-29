@@ -60,6 +60,26 @@ public struct PublicClient {
 	}
 	
 	@available(iOS 13.0.0, *)
+	public func getBlock(hydrated: Bool = false) async throws -> Block {
+		let data = try await Request.post(chainData.url, "eth_getBlockByNumber", params: ["latest", hydrated])
+		
+		let str = String(decoding: data, as: UTF8.self)
+		print("[getChainId] RPC Response:\n\(str)")
+		
+		do {
+			let json = try JSONDecoder().decode(BlockResponse.self, from: data)
+			let block = json.result
+			print("Block is: \(block)")
+			
+			return block
+		} catch {
+			let str = String(decoding: data, as: UTF8.self)
+			print("[getChainId] RPC Response:\n\(str)")
+			throw error
+		}
+	}
+	
+	@available(iOS 13.0.0, *)
 	public func getChainId() async throws -> UInt {
 		let data = try await Request.post(chainData.url, "eth_chainId", params: [])
 		

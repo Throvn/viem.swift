@@ -25,7 +25,7 @@ public struct PublicClient {
 		let data = try await Request.post(chainData.url, "eth_getBalance", params: [address, "latest"])
 		
 		do {
-			let json = try JSONDecoder().decode(BalanceResponse.self, from: data)
+			let json = try JSONDecoder().decode(BigUIntResponse.self, from: data)
 			let balance = BigUInt(hex: json.result)
 			print("Balance is: \(balance) \(json.result)")
 			
@@ -37,12 +37,34 @@ public struct PublicClient {
 		}
 	}
 	
+	@available(iOS 16.0.0, *)
+	public func getTransactionCount(_ address: WalletAddress) async throws -> UInt {
+		guard address.isValidWalletAddress() else {
+			throw ViemErrors.malformedAddress(address)
+		}
+		
+		let data = try await Request.post(chainData.url, "eth_getTransactionCount", params: [address, "latest"])
+		
+		do {
+			let json = try JSONDecoder().decode(BigUIntResponse.self, from: data)
+			let txCount = BigUInt(hex: json.result)
+			print("Transaction Count is: \(txCount) \(json.result)")
+			
+			return UInt(txCount)!
+		} catch {
+			let str = String(decoding: data, as: UTF8.self)
+			print("[getTransactionCount] RPC Response:\n\(str)")
+			throw error
+		}
+
+	}
+	
 	@available(iOS 13.0.0, *)
 	public func getChainId() async throws -> UInt {
 		let data = try await Request.post(chainData.url, "eth_chainId", params: [])
 		
 		do {
-			let json = try JSONDecoder().decode(ChainIdResponse.self, from: data)
+			let json = try JSONDecoder().decode(BigUIntResponse.self, from: data)
 			let chainId = BigUInt(hex: json.result)
 			print("Chain Id is: \(chainId) \(json.result)")
 			

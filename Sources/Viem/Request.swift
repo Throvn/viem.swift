@@ -17,12 +17,7 @@ struct JsonRpcPayload: Encodable {
 	}
 }
 
-struct BalanceResponse: Decodable {
-	let id: String
-	let result: String
-}
-
-struct ChainIdResponse: Decodable {
+struct BigUIntResponse: Decodable {
 	let id: String
 	let result: String
 }

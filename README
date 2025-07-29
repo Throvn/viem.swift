@@ -1,0 +1,42 @@
+# viem.swift
+
+An easy to use web3 library to interact with EVM compatible chains. This project tries to resemble the API structure of the (viem)[https:viem.sh] project but in Swift.
+
+```swift
+import Viem
+
+let client = createPublicClient(chain: .sepolia)
+
+let address: WalletAddress = "0xA765C6AE85586572D67F1d6D2b8C30032040365E"
+let balance: BigUInt = try await client.getBalance(address)
+
+print("Mom, I'm rich: \(balance)!")
+```
+
+The best documentation can be found using intellisense. I try to expand on this in the future, but if you hit a roadblock, try reading up on the official viem docs.
+
+## WalletAddress
+
+This is just a `typealias` for a string, to prevent casting hell.
+It supports a few additional methods:
+
+* `"0x...".isValidWalletAddress() -> Bool`
+* `"0x...".toChecksumAddress() -> WalletAddress`
+
+## BigUInt
+
+This is also just a `typealias` for a string, to make printing easier. I've decided to roll my own BigInt implementation to avoid dependencies and only implement what is really needed.
+New features will be added when needed (or you can just extend the `BigUInt` struct to your liking.
+
+## Clients
+
+You set up new clients similarly to the original viem.
+
+* `createPublicClient(chain: Chains) -> PublicClient`
+* `createWalletClient(chain: Chains, account: WalletAccount) -> WalletClient`
+* `privateKeyToAccount("SECRET KEY") -> WalletAccount`
+
+When you would like to know the difference between the clients, read up on the official viem website.
+Currently, the only supported way to interact with an account on chain is by supplying a private key, sorry.
+																										
+Note: This project is created and developed independently of the viem project.

@@ -7,22 +7,41 @@
 import Foundation
 import secp256k1
 
+public struct WalletAccount {
+	let privateKey: String
+	let publicKey: String
+}
+
 public class WalletClient {
 	let chainData: ChainData
-	init(chain: ChainData) {
+	let account: WalletAccount?
+	init(chain: ChainData, account: WalletAccount?) {
 		self.chainData = chain
+		self.account = account
 	}
 	
+	@available(iOS 16.0, *)
+	public func getAddresses() -> [WalletAddress] {
+		if account?.publicKey != nil {
+			return [try! account!.publicKey.toChecksumAddress()]
+		}
+		
+		return []
+	}
 }
 
-public func createWalletClient(chain: Chain) -> WalletClient {
+public func createWalletClient(chain: Chain, account: WalletAccount?) -> WalletClient {
 	let chain = getChainData(chain: chain)
-	return WalletClient(chain: chain)
+	return WalletClient(chain: chain, account: account)
 }
 
 
+public func privateKeyToAccount(_ privateKeyHex: String) throws -> WalletAccount {
+	let publicKeyHex = try privateKeyToPublicKey(privateKeyHex)
+	return WalletAccount(privateKey: privateKeyHex, publicKey: publicKeyHex)
+}
 
-public func privateKeyToAccount(_ privateKeyHex: String) throws -> WalletAddress {
+func privateKeyToPublicKey(_ privateKeyHex: String) throws -> WalletAddress {
 	// 1. Decode hex string to 32-byte Data
 	guard let privKeyData = Data(hex: privateKeyHex), privKeyData.count == 32 else {
 		throw ViemErrors.invalidKeyFormat

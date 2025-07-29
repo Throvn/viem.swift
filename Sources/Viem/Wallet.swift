@@ -47,4 +47,29 @@ extension WalletAddress {
 		
 		return isValidChecksumAddress(self)
 	}
+	
+	@available(iOS 16.0, *)
+	func toChecksumAddress() throws -> WalletAddress {
+		guard self.isValidWalletAddress() else {
+			throw ViemErrors.malformedAddress(self)
+		}
+		
+		let address = self.lowercased().dropFirst(2) // remove "0x"
+		let hash = keccak256(String(address))        // hash of lowercased hex address
+		let hexHash = hash.map { String(format: "%02x", $0) }.joined()
+
+		var checksummedAddress = "0x"
+
+		for (i, char) in address.enumerated() {
+			let hashChar = hexHash[hexHash.index(hexHash.startIndex, offsetBy: i)]
+			if let hashValue = Int(String(hashChar), radix: 16), hashValue >= 8 {
+				checksummedAddress.append(char.uppercased())
+			} else {
+				checksummedAddress.append(char)
+			}
+		}
+
+		return checksummedAddress
+	}
+
 }

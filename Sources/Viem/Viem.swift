@@ -1,0 +1,66 @@
+// The Swift Programming Language
+// https://docs.swift.org/swift-book
+
+import Foundation
+
+enum ViemErrors: Error {
+	case malformedAddress(String)
+}
+
+public struct PublicClient {
+	let chainData: ChainData
+	init(chain: ChainData) {
+		self.chainData = chain
+	}
+	
+	/// Queries the current balance and returns it in wei
+	/// - Parameter address: The wallet address to check the balance of
+	/// - Returns: The balance in wei, the smallest available currency
+	@available(iOS 16.0, *)
+	public func getBalance(_ address: WalletAddress) async throws -> BigUInt {
+		guard address.isValidWalletAddress() else {
+			throw ViemErrors.malformedAddress(address)
+		}
+		
+		let data = try await Request.post(chainData.url, "eth_getBalance", params: [address, "latest"])
+		
+		do {
+			let json = try JSONDecoder().decode(BalanceResponse.self, from: data)
+			let balance = BigUInt(hex: json.result)
+			print("Balance is: \(balance) \(json.result)")
+			
+			return balance
+		} catch {
+			let str = String(decoding: data, as: UTF8.self)
+			print("[getBalance] RPC Response:\n\(str)")
+			throw error
+		}
+	}
+	
+	@available(iOS 13.0.0, *)
+	public func getChainId() async throws -> UInt {
+		let data = try await Request.post(chainData.url, "eth_chainId", params: [])
+		
+		do {
+			let json = try JSONDecoder().decode(ChainIdResponse.self, from: data)
+			let chainId = BigUInt(hex: json.result)
+			print("Chain Id is: \(chainId) \(json.result)")
+			
+			return UInt(chainId)!
+		} catch {
+			let str = String(decoding: data, as: UTF8.self)
+			print("[getChainId] RPC Response:\n\(str)")
+			throw error
+		}
+	}
+}
+
+
+/// Creates a connection to an RPC client.
+/// - Parameter chain: Chain which should be connected to
+/// - Returns: public client which interacts with the chain node
+public func createPublicClient(chain: Chain) -> PublicClient {
+	let chain = getChainData(chain: chain)
+	return PublicClient(chain: chain)
+}
+
